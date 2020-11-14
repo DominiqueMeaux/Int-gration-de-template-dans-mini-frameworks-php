@@ -8,16 +8,19 @@ class Page {
     // theme ou l on récupère un fichier
     private $theme = "";
     private $template = "";
-    private$dossier_controller = "";
+    private $dossier_controller = "";
+    private $dossier_theme = "";
 
     /**
      * Constructeur de page
      */
-    function __construct($page = "home", $theme = "html5up-massivelly", $template = "index", $dossier_controller = "controller/"){
+    function __construct($page = "home", $theme = "html5up-massivelly", $template = "index", $dossier_controller = "controller", $dossier_theme = "themes"){
         // Initialisation du theme
         $this->theme = $theme;
         $this-> template = $template;
         $this->dossier_controller = $dossier_controller;
+        $this->dossier_theme = $dossier_theme;
+
         // Si on passe une autre page que home (qui est la page par default)
         if(isset($_GET['page']))
         {
@@ -56,23 +59,26 @@ class Page {
     }
 
     /**
-     * Fonction d'affichage des variable twig
+     * Fonction d'affichage 
      *
      * @return void
      */
     function prepare(){
-        include_once $this->dossier_controller . $this->page . ".php";
+        include_once $this->dossier_controller . "/" . $this->page . ".php";
+        // Execute un controller et récupère les variable de la page en question
         $texts = controller();
         // Si on récupère un template dans $texts
         if(isset($texts['template'])){
             $this->template = $texts['template'];
+            // unset une fois utilisé
+            unset($texts['template']);
         }
-        // On récupère dans le theme 
-        $fichier = $this->theme . "/" . $this->template . ".html.twig";
-        // On récupère le contenu du fichier
-        $this->code_page = file_get_contents($fichier);
+        // On récupère dans le dossier le theme 
+        $dossier = $this->dossier_theme . "/" . $this->theme;
+        // Utilisation du dossier pour récupérer le template
+        $this->code_page = file_get_contents($dossier . "/" . $this->template . ".html.twig");
         // Paramétrage du theme
-        $this->replaceLabel("theme", $this->theme);
+        $this->replaceLabel("theme",$dossier);
         // On initialise le menu
         $menu = "";
         // On récupère le pointer vers un dossier
