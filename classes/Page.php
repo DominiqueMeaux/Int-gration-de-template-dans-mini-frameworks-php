@@ -1,5 +1,10 @@
 <?php 
 
+function afficheProblèmeInstallation($msg){
+
+     echo $msg; 
+ die();
+}
 class Page {
 
     // Code html à afficher
@@ -18,8 +23,21 @@ class Page {
         // Initialisation du theme
         $this->theme = $theme;
         $this-> template = $template;
-        $this->dossier_controller = $dossier_controller;
-        $this->dossier_theme = $dossier_theme;
+        // Si c'est un dossier
+        if(is_dir($dossier_controller)){
+            $this->dossier_controller = $dossier_controller;
+        
+        }else{
+
+            afficheProblèmeInstallation("Dossier controller");
+        }
+        if (is_dir($dossier_theme)) {
+            $this->dossier_theme = $dossier_theme;
+        } else {
+
+            afficheProblèmeInstallation("Dossier thème");
+        }
+        
 
         // Si on passe une autre page que home (qui est la page par default)
         if(isset($_GET['page']))
@@ -64,6 +82,10 @@ class Page {
      * @return void
      */
     function prepare(){
+        
+        if(!is_file($this->dossier_controller . "/" . $this->page . ".php")){
+            afficheProblèmeInstallation("Le controller ". $this->page . ".php"." n existe pas");
+        }
         include_once $this->dossier_controller . "/" . $this->page . ".php";
         // Execute un controller et récupère les variable de la page en question
         $texts = controller();
@@ -76,7 +98,31 @@ class Page {
         // On récupère dans le dossier le theme 
         $dossier = $this->dossier_theme . "/" . $this->theme;
         // Utilisation du dossier pour récupérer le template
+        if(!is_file($dossier . "/" . $this->template . ".html.twig")){
+            afficheProblèmeInstallation(("Tempate ".$this->template.".html.twig". " manquante"));
+        }
         $this->code_page = file_get_contents($dossier . "/" . $this->template . ".html.twig");
+
+        // On vérifie si le template hérite d'un parent
+        preg_match('/{%\s*extends\s*\"([^%}]*)\"\s*%}/', $this->code_page, $extends);
+        // Si il y a un extends je récupère le code de la page du parent et dans ce code je remplace 
+        // le code de certaine variable par le code des blocks transmits dans le template enfant
+        if(isset($extends[1])){
+            $code_blocks = $this->code_page;
+            $this->code_page = file_get_contents($dossier . "/" . $extends[1]);
+            // Récupèration de tout les blocks '$code_block' que l'on met ds un tableau '$
+            // regex du nom des blocks
+            preg_match_all('/{%\s*block\s*([^%}]*)s*%}/', $code_blocks, $blocks);
+            // 
+            foreach($blocks[1] as $block){
+                $block = trim($block);
+                // Regex de malade : On récupère les ligne sauf la ligne endblock et on fini par endblock
+                preg_match('/{%\h*block\h*'.$block. '\h*%}\R((?:(?!{%\h*endblock\h*%}).*\R)*){%\h*endblock\h*%}/', $code_blocks, $block_content);
+                if(isset($block_content[1])){
+                    $this->replaceLabel($block, $block_content[1]);
+                }
+            }
+        }
         // Paramétrage du theme
         $this->replaceLabel("theme",$dossier);
         // On initialise le menu

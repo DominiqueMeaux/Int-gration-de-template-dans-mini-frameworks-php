@@ -8,6 +8,7 @@ function controller()
         'title' => "Le catalogue de produit",
         'subTitle' => "Une demo",
         'titleC' => "Catalogue",
+        'tableau' => "un tableau",
         'content' => "Lorem ipsum...",
         'footer' => "Pied de page"
     ];

@@ -5,8 +5,8 @@
 include_once "classes/Page.php";
  $ma_page = new Page();
 
- $ma_page->setDossierController("controller2/");
- $ma_page->setTheme("html5up-massivelly2");
+ $ma_page->setDossierController("controller/");
+ $ma_page->setTheme("html5up-stellar");
 //  $ma_page->setTemplate("catalogue");
 
  $ma_page->prepare();
